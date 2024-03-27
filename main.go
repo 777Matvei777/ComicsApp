@@ -3,9 +3,10 @@ package main
 import (
 	"flag"
 	"fmt"
+	"strings"
+
 	"github.com/kljensen/snowball"
 	"github.com/kljensen/snowball/english"
-	"strings"
 )
 
 func expandContractions(word string) string {
@@ -73,7 +74,7 @@ func expandContractions(word string) string {
 }
 func main() {
 	var str string
-	flag.StringVar(&str, "s", "", "строка после флага s")
+	flag.StringVar(&str, "s", "", "String after -s")
 	flag.Parse()
 	words := strings.Fields(str)
 	var normalized []string
