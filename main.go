@@ -10,7 +10,7 @@ func main() {
 	var str string
 	flag.StringVar(&str, "s", "", "String after -s")
 	flag.Parse()
-	words := strings.Fields(str)
+	words := splitString(str)
 	normalized, err := stemming(words)
 	if err != nil {
 		fmt.Println("Something went wrong")

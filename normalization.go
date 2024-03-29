@@ -3,6 +3,8 @@ package main
 import (
 	"strings"
 
+	"regexp"
+
 	"github.com/kljensen/snowball"
 	"github.com/kljensen/snowball/english"
 )
@@ -72,6 +74,20 @@ func expandContractions(word string) string {
 	return word
 }
 
+func splitString(input string) []string {
+	reg := regexp.MustCompile("[^a-zA-Z]+")
+	return reg.Split(input, -1)
+
+}
+
+func contains(slice []string, element string) bool {
+	for _, v := range slice {
+		if v == element {
+			return true
+		}
+	}
+	return false
+}
 func stemming(words []string) ([]string, error) {
 	var normalized []string
 	for _, v := range words {
@@ -84,7 +100,7 @@ func stemming(words []string) ([]string, error) {
 				if err != nil {
 					return nil, err
 				}
-				if stemmed != "" {
+				if stemmed != "" && !contains(normalized, stemmed) {
 					normalized = append(normalized, stemmed)
 				}
 			}
