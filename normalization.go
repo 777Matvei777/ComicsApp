@@ -1,9 +1,8 @@
 package main
 
 import (
-	"strings"
-
 	"regexp"
+	"strings"
 
 	"github.com/kljensen/snowball"
 	"github.com/kljensen/snowball/english"
@@ -75,7 +74,7 @@ func expandContractions(word string) string {
 }
 
 func splitString(input string) []string {
-	reg := regexp.MustCompile("[^a-zA-Z]+")
+	reg := regexp.MustCompile("[^a-zA-Z']+")
 	return reg.Split(input, -1)
 
 }
