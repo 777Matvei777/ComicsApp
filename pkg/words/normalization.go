@@ -1,4 +1,4 @@
-package main
+package words
 
 import (
 	"regexp"
@@ -8,7 +8,7 @@ import (
 	"github.com/kljensen/snowball/english"
 )
 
-var contractions = map[string]string{
+var Contractions = map[string]string{
 	"aren't":    "are not",
 	"can't":     "cannot",
 	"couldn't":  "could not",
@@ -66,20 +66,20 @@ var contractions = map[string]string{
 	"you've":    "you have",
 }
 
-func expandContractions(word string) string {
-	if expanded, exists := contractions[word]; exists {
+func ExpandContractions(word string) string {
+	if expanded, exists := Contractions[word]; exists {
 		return expanded
 	}
 	return word
 }
 
-func splitString(input string) []string {
+func SplitString(input string) []string {
 	reg := regexp.MustCompile("[^a-zA-Z']+")
 	return reg.Split(input, -1)
 
 }
 
-func contains(slice []string, element string) bool {
+func Contains(slice []string, element string) bool {
 	for _, v := range slice {
 		if v == element {
 			return true
@@ -87,11 +87,11 @@ func contains(slice []string, element string) bool {
 	}
 	return false
 }
-func stemming(words []string) ([]string, error) {
+func Stemming(words []string) ([]string, error) {
 	var normalized []string
 	for _, v := range words {
 		v = strings.ToLower(v)
-		newLine := expandContractions(v)
+		newLine := ExpandContractions(v)
 		expandedWords := strings.Fields(newLine)
 		for _, word := range expandedWords {
 			if !english.IsStopWord(word) {
@@ -99,7 +99,7 @@ func stemming(words []string) ([]string, error) {
 				if err != nil {
 					return nil, err
 				}
-				if stemmed != "" && !contains(normalized, stemmed) {
+				if stemmed != "" && !Contains(normalized, stemmed) {
 					normalized = append(normalized, stemmed)
 				}
 			}
