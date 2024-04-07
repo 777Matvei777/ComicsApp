@@ -14,24 +14,30 @@ type XkcdStruct struct {
 	Url        string `json:"img"`
 }
 
-var Db []XkcdStruct
-
-func Parse(Url string) {
+func Parse(Url string) []XkcdStruct {
+	var Db []XkcdStruct
 	for i := 1; ; i++ { //2914
 		adress := fmt.Sprintf("%s/%d/info.0.json", Url, i)
-		resp, _ := http.Get(adress)
+		resp, err := http.Get(adress)
+		if err != nil {
+			fmt.Println("getting error")
+		}
+		defer resp.Body.Close()
 		if resp.StatusCode == 404 && i != 404 {
 			resp.Body.Close()
 			fmt.Printf("Загрузилось %d комиксов\n", i)
 			break
 		}
-		defer resp.Body.Close()
 		var one_data XkcdStruct
 		data, _ := io.ReadAll(resp.Body)
-		_ = json.Unmarshal([]byte(data), &one_data)
+		err = json.Unmarshal([]byte(data), &one_data)
+		if err != nil {
+			fmt.Println("error:", err)
+		}
 		Db = append(Db, one_data)
 		if i%100 == 0 {
 			fmt.Printf("Загрузилось %d комиксов\n", i)
 		}
 	}
+	return Db
 }

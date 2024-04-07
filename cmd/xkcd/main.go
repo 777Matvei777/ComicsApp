@@ -2,9 +2,8 @@ package main
 
 import (
 	"flag"
-	"fmt"
+	"myapp/pkg/app"
 	"myapp/pkg/config"
-	"myapp/pkg/database"
 )
 
 func main() {
@@ -15,12 +14,12 @@ func main() {
 	flag.Parse()
 
 	cfg := config.New()
-	jsonData := database.CreateJson(cfg.Url, cfg.Db_file)
+	app.Start(cfg.Url, cfg.Db_file)
 	if o {
 		if n > 0 {
-			database.WriteData(n, cfg.Db_file)
+			app.WriteData(n, cfg.Db_file)
 		} else {
-			fmt.Println(string(*jsonData))
+			app.WriteData(0, cfg.Db_file)
 		}
 	}
 }

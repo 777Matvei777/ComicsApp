@@ -2,6 +2,7 @@ package app
 
 import (
 	"fmt"
+	"myapp/pkg/database"
 	"myapp/pkg/words"
 	"myapp/pkg/xkcd"
 )
@@ -16,16 +17,25 @@ func Normalize(keywords string) []string {
 	return normalized
 }
 
-func NewJson() map[int]interface{} {
+func CreateJson(Url string, Db_path string) {
+	Db := xkcd.Parse(Url)
 	data := make(map[int]interface{})
-	for i := 0; i < len(xkcd.Db); i++ {
-		keywords := fmt.Sprintf("%s %s", (xkcd.Db)[i].Alt, (xkcd.Db)[i].Transcript)
+	for i := 0; i < len(Db); i++ {
+		keywords := fmt.Sprintf("%s %s", (Db)[i].Alt, (Db)[i].Transcript)
 		normalized := Normalize(keywords)
 		value := map[string]interface{}{
-			"url":      (xkcd.Db)[i].Url,
+			"url":      (Db)[i].Url,
 			"keywords": normalized,
 		}
-		data[(xkcd.Db)[i].Id] = value
+		data[(Db)[i].Id] = value
 	}
-	return data
+	database.CreateDataBase(data, Db_path)
+}
+
+func WriteData(n int, Db_path string) {
+	database.WriteData(n, Db_path)
+}
+
+func Start(Url string, Db_path string) {
+	CreateJson(Url, Db_path)
 }
