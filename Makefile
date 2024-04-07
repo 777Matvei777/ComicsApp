@@ -1,3 +1,5 @@
+GO = go
+BINARY = xkcd
 build:
-	go build 
+	$(GO) build ./cmd/xkcd
 
