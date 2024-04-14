@@ -79,16 +79,9 @@ func SplitString(input string) []string {
 
 }
 
-func Contains(slice []string, element string) bool {
-	for _, v := range slice {
-		if v == element {
-			return true
-		}
-	}
-	return false
-}
 func Stemming(words []string) ([]string, error) {
 	var normalized []string
+	contains := make(map[string]bool)
 	for _, v := range words {
 		v = strings.ToLower(v)
 		newLine := ExpandContractions(v)
@@ -99,8 +92,11 @@ func Stemming(words []string) ([]string, error) {
 				if err != nil {
 					return nil, err
 				}
-				if stemmed != "" && !Contains(normalized, stemmed) {
-					normalized = append(normalized, stemmed)
+				if stemmed != "" {
+					if _, ok := contains[stemmed]; !ok {
+						normalized = append(normalized, stemmed)
+						contains[stemmed] = true
+					}
 				}
 			}
 		}

@@ -8,7 +8,7 @@ import (
 
 type Config struct {
 	Url      string `yaml:"source_url"`
-	Db_file  string `yaml:"db_file"`
+	DbFile   string `yaml:"DbFile"`
 	Parallel int    `yaml:"parallel"`
 }
 
