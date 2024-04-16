@@ -6,6 +6,7 @@ import (
 	"myapp/pkg/database"
 	"myapp/pkg/words"
 	"myapp/pkg/xkcd"
+	"os"
 )
 
 func Normalize(keywords string) []string {
@@ -14,7 +15,7 @@ func Normalize(keywords string) []string {
 	return normalized
 }
 
-func CreateJson(Url string, Db_path string, Parallel int, ctx context.Context, num int, exist map[int]int) {
+func CreateJson(Url string, Db_path string, Parallel int, ctx context.Context, num int, exist map[int]bool) {
 	Db := xkcd.Parse(Url, Parallel, ctx, num, exist)
 	data := make(map[int]interface{})
 	for i := 0; i < len(Db); i++ {
@@ -27,14 +28,28 @@ func CreateJson(Url string, Db_path string, Parallel int, ctx context.Context, n
 		data[(Db)[i].Id] = value
 	}
 	database.CreateDataBase(data, Db_path)
-	select {}
 }
 
-func Start(Url string, Db_path string, parallel int, ctx context.Context, num int, exist map[int]int) {
-	CreateJson(Url, Db_path, parallel, ctx, num, exist)
+func Start(Url string, Db_path string, parallel int, ctx context.Context, num int) {
+	exist_flag := false
+	if _, err := os.Stat(Db_path); err == nil {
+		fmt.Println("File already exist")
+		exist_flag = true
+	}
+	if exist_flag {
+		num, exist := CheckDataBase(Db_path)
+		if num != 0 {
+			CreateJson(Url, Db_path, parallel, ctx, num, exist)
+		} else {
+			fmt.Println("All comics in file")
+		}
+	} else {
+		mp := make(map[int]bool)
+		CreateJson(Url, Db_path, parallel, ctx, num, mp)
+	}
 }
 
-func CheckDataBase(Db_path string) (int, map[int]int) {
+func CheckDataBase(Db_path string) (int, map[int]bool) {
 	return database.CheckDataBase(Db_path)
 
 }

@@ -3,6 +3,7 @@ package database
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"os"
 )
 
@@ -14,28 +15,46 @@ type Item struct {
 var items map[int]Item
 
 func CreateDataBase(data map[int]interface{}, Db_path string) {
-	jsonData, _ := json.Marshal(data)
+	jsonData, err := json.Marshal(data)
+	if err != nil {
+		log.Println("Marshaling error: ", err)
+	}
 	if _, err := os.Stat(Db_path); err == nil {
 		file, err := os.ReadFile(Db_path)
 		if err != nil {
-			fmt.Println(err)
+			log.Println("Reading error: ", err)
 		}
 		var curr_items map[int]Item
-		_ = json.Unmarshal(file, &curr_items)
-		_ = json.Unmarshal(jsonData, &curr_items)
-		curr_data, _ := json.Marshal(curr_items)
+		err = json.Unmarshal(file, &curr_items)
+		if err != nil {
+			log.Println("Unmarshaling error: ", err)
+		}
+		err = json.Unmarshal(jsonData, &curr_items)
+		if err != nil {
+			log.Println("unmarshaling error: ", err)
+		}
+		curr_data, err := json.Marshal(curr_items)
+		if err != nil {
+			log.Println("Marshaling error: ", err)
+		}
 		os.WriteFile(Db_path, curr_data, 0644)
 		items = curr_items
 	} else {
-		_ = os.WriteFile(Db_path, jsonData, 0644)
-		_ = json.Unmarshal(jsonData, &items)
+		err = os.WriteFile(Db_path, jsonData, 0644)
+		if err != nil {
+			log.Println("Writing error: ", err)
+		}
+		err = json.Unmarshal(jsonData, &items)
+		if err != nil {
+			log.Println("Unmarshaling error: ", err)
+		}
 	}
 	fmt.Printf("Data saved to %s\n", Db_path)
 	fmt.Printf("%d comics in file", len(items))
 	os.Exit(0)
 }
 
-func CheckDataBase(Db_path string) (int, map[int]int) {
+func CheckDataBase(Db_path string) (int, map[int]bool) {
 	file, err := os.Open(Db_path)
 	if err != nil {
 		fmt.Println("error opened file")
@@ -48,7 +67,7 @@ func CheckDataBase(Db_path string) (int, map[int]int) {
 	}
 	comics_id := 1
 	flag := false
-	exist := make(map[int]int)
+	exist := make(map[int]bool)
 	for ; comics_id < len(items); comics_id++ {
 		if comics_id != 404 {
 			if _, ok := items[comics_id]; !ok {
@@ -56,7 +75,7 @@ func CheckDataBase(Db_path string) (int, map[int]int) {
 					break
 				}
 			} else {
-				exist[comics_id] = 1
+				exist[comics_id] = true
 			}
 		}
 	}
