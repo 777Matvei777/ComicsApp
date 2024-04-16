@@ -93,7 +93,7 @@ func Stemming(words []string) ([]string, error) {
 					return nil, err
 				}
 				if stemmed != "" {
-					if _, ok := contains[stemmed]; !ok {
+					if !contains[stemmed] {
 						normalized = append(normalized, stemmed)
 						contains[stemmed] = true
 					}

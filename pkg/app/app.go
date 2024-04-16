@@ -28,7 +28,6 @@ func CreateJson(Url string, Db_path string, Parallel int, ctx context.Context, n
 		data[(Db)[i].Id] = value
 	}
 	database.CreateDataBase(data, Db_path)
-	select {}
 }
 
 func Start(Url string, Db_path string, parallel int, ctx context.Context, num int) {
