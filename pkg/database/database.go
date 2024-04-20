@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"slices"
+	"sort"
 )
 
 type Item struct {
@@ -84,4 +86,97 @@ func CheckDataBase(Db_path string) (int, map[int]bool) {
 	}
 	fmt.Printf("Missed comics with id %d\n", comics_id)
 	return comics_id, exist
+}
+
+func createIndexFile() map[string][]int {
+	var items map[int]Item
+	if _, err := os.Stat("pkg/database/index.json"); err != nil {
+		file, _ := os.ReadFile("pkg/database/database.json")
+		_ = json.Unmarshal(file, &items)
+		index := make(map[string][]int)
+		for k, words := range items {
+			for _, word := range words.Keywords {
+				index[word] = append(index[word], k)
+			}
+		}
+		jsonData, err := json.Marshal(index)
+		if err != nil {
+			fmt.Println("Marshaling error")
+		}
+		err = os.WriteFile("pkg/database/index.json", jsonData, 0644)
+		if err != nil {
+			fmt.Println("writing error")
+		}
+		return index
+	} else {
+		file, err := os.ReadFile("pkg/database/index.json")
+		if err != nil {
+			fmt.Println("Reading error")
+		}
+		index := make(map[string][]int)
+		err = json.Unmarshal(file, &index)
+		if err != nil {
+			fmt.Println("Unmarshaling error")
+		}
+		return index
+	}
+
+}
+
+func SearchDatabase(query []string) []string {
+	var comics []string
+	stat := make(map[int]int)
+	for index, comic := range items {
+		for _, query_word := range query {
+			for _, keyword := range comic.Keywords {
+				if query_word == keyword {
+					stat[index]++
+				}
+			}
+		}
+	}
+	keys := make([]int, 0, len(stat))
+	for k := range stat {
+		keys = append(keys, k)
+	}
+	sort.SliceStable(keys, func(i, j int) bool {
+		return stat[keys[i]] > stat[keys[j]]
+	})
+	for _, k := range keys {
+		comic_url := items[k].URL
+		comics = append(comics, comic_url)
+		if len(comics) >= 10 {
+			break
+		}
+	}
+	return comics
+}
+func SearchByIndex(query []string) []string {
+	index := createIndexFile()
+	stat := make(map[int]int)
+	var comics []string
+	for _, v := range query {
+		if ids, found := index[v]; found {
+			for _, i := range ids {
+				stat[i]++
+			}
+		}
+	}
+	keys := make([]int, 0, len(stat))
+	for k := range stat {
+		keys = append(keys, k)
+	}
+	sort.SliceStable(keys, func(i, j int) bool {
+		return stat[keys[i]] > stat[keys[j]]
+	})
+	for _, k := range keys {
+		comic_url := items[k].URL
+		if found := slices.Contains(comics, comic_url); !found {
+			comics = append(comics, comic_url)
+		}
+		if len(comics) >= 10 {
+			break
+		}
+	}
+	return comics
 }

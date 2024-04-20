@@ -48,6 +48,25 @@ func Start(Url string, Db_path string, parallel int, ctx context.Context, num in
 		CreateJson(Url, Db_path, parallel, ctx, num, mp)
 	}
 }
+func SearhDatabase(searchFlag *string, indexFlag *bool) {
+	if *searchFlag != "" {
+		fmt.Println("Найденные комиксы: ")
+		split_query := words.SplitString(*searchFlag)
+		normalized_query, _ := words.Stemming(split_query)
+		if *indexFlag {
+			comics_url := database.SearchByIndex(normalized_query)
+			for k, url := range comics_url {
+				fmt.Println(k+1, " ", url)
+			}
+		} else {
+			comics_url := database.SearchDatabase(normalized_query)
+			for k, url := range comics_url {
+				fmt.Println(k+1, " ", url)
+			}
+		}
+
+	}
+}
 
 func CheckDataBase(Db_path string) (int, map[int]bool) {
 	return database.CheckDataBase(Db_path)
