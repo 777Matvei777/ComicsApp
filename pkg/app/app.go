@@ -54,6 +54,7 @@ func SearhDatabase(searchFlag *string, indexFlag *bool) {
 		split_query := words.SplitString(*searchFlag)
 		normalized_query, _ := words.Stemming(split_query)
 		if *indexFlag {
+			fmt.Println("Поиск по индексу")
 			comics_url := database.SearchByIndex(normalized_query)
 			for k, url := range comics_url {
 				fmt.Println(k+1, " ", url)
