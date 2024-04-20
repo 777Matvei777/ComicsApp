@@ -52,8 +52,7 @@ func CreateDataBase(data map[int]interface{}, Db_path string) {
 		}
 	}
 	fmt.Printf("Data saved to %s\n", Db_path)
-	fmt.Printf("%d comics in file", len(items))
-	os.Exit(0)
+	fmt.Printf("%d comics in file\n", len(items))
 }
 
 func CheckDataBase(Db_path string) (int, map[int]bool) {
