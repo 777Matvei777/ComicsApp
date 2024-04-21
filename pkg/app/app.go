@@ -47,6 +47,7 @@ func Start(Url string, Db_path string, parallel int, ctx context.Context, num in
 		mp := make(map[int]bool)
 		CreateJson(Url, Db_path, parallel, ctx, num, mp)
 	}
+	database.CreateIndexFile()
 }
 func SearhDatabase(searchFlag *string, indexFlag *bool) {
 	if *searchFlag != "" {

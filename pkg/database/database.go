@@ -16,6 +16,8 @@ type Item struct {
 
 var items map[int]Item
 
+var index map[string][]int
+
 func CreateDataBase(data map[int]interface{}, Db_path string) {
 	jsonData, err := json.Marshal(data)
 	if err != nil {
@@ -87,18 +89,18 @@ func CheckDataBase(Db_path string) (int, map[int]bool) {
 	return comics_id, exist
 }
 
-func createIndexFile() map[string][]int {
+func CreateIndexFile() {
 	var items map[int]Item
 	if _, err := os.Stat("pkg/database/index.json"); err != nil {
 		file, _ := os.ReadFile("pkg/database/database.json")
+		data := make(map[string][]int)
 		_ = json.Unmarshal(file, &items)
-		index := make(map[string][]int)
 		for k, words := range items {
 			for _, word := range words.Keywords {
-				index[word] = append(index[word], k)
+				data[word] = append(data[word], k)
 			}
 		}
-		jsonData, err := json.Marshal(index)
+		jsonData, err := json.Marshal(data)
 		if err != nil {
 			fmt.Println("Marshaling error")
 		}
@@ -106,18 +108,18 @@ func createIndexFile() map[string][]int {
 		if err != nil {
 			fmt.Println("writing error")
 		}
-		return index
+		index = data
 	} else {
 		file, err := os.ReadFile("pkg/database/index.json")
 		if err != nil {
 			fmt.Println("Reading error")
 		}
-		index := make(map[string][]int)
-		err = json.Unmarshal(file, &index)
+		data := make(map[string][]int)
+		err = json.Unmarshal(file, &data)
 		if err != nil {
 			fmt.Println("Unmarshaling error")
 		}
-		return index
+		index = data
 	}
 
 }
@@ -151,7 +153,6 @@ func SearchDatabase(query []string) []string {
 	return comics
 }
 func SearchByIndex(query []string) []string {
-	index := createIndexFile()
 	stat := make(map[int]int)
 	var comics []string
 	for _, v := range query {
