@@ -47,6 +47,7 @@ func Start(Url string, Db_path string, parallel int, ctx context.Context, num in
 		mp := make(map[int]bool)
 		CreateJson(Url, Db_path, parallel, ctx, num, mp)
 	}
+	database.CreateIndexFile()
 }
 func SearhDatabase(searchFlag *string, indexFlag *bool) {
 	if *searchFlag != "" {
@@ -54,6 +55,7 @@ func SearhDatabase(searchFlag *string, indexFlag *bool) {
 		split_query := words.SplitString(*searchFlag)
 		normalized_query, _ := words.Stemming(split_query)
 		if *indexFlag {
+			fmt.Println("Поиск по индексу")
 			comics_url := database.SearchByIndex(normalized_query)
 			for k, url := range comics_url {
 				fmt.Println(k+1, " ", url)
