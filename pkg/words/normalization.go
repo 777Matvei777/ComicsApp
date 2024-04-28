@@ -103,3 +103,9 @@ func Stemming(words []string) ([]string, error) {
 	}
 	return normalized, nil
 }
+
+func Normalize(keywords string) []string {
+	arr_words := SplitString(keywords)
+	normalized, _ := Stemming(arr_words)
+	return normalized
+}

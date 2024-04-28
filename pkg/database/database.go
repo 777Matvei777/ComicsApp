@@ -4,31 +4,29 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"myapp/pkg/models"
 	"os"
 	"slices"
 	"sort"
 )
 
-type Item struct {
-	URL      string   `json:"url"`
-	Keywords []string `json:"keywords"`
+type DataBase struct {
+	Db_path string
+	Items   map[int]models.Item
+	Index   map[string][]int
 }
 
-var items map[int]Item
-
-var index map[string][]int
-
-func CreateDataBase(data map[int]interface{}, Db_path string) {
+func (d *DataBase) CreateDataBase(data map[int]interface{}) {
 	jsonData, err := json.Marshal(data)
 	if err != nil {
 		log.Println("Marshaling error: ", err)
 	}
-	if _, err := os.Stat(Db_path); err == nil {
-		file, err := os.ReadFile(Db_path)
+	if _, err := os.Stat(d.Db_path); err == nil {
+		file, err := os.ReadFile(d.Db_path)
 		if err != nil {
 			log.Println("Reading error: ", err)
 		}
-		var curr_items map[int]Item
+		var curr_items map[int]models.Item
 		err = json.Unmarshal(file, &curr_items)
 		if err != nil {
 			log.Println("Unmarshaling error: ", err)
@@ -41,61 +39,55 @@ func CreateDataBase(data map[int]interface{}, Db_path string) {
 		if err != nil {
 			log.Println("Marshaling error: ", err)
 		}
-		os.WriteFile(Db_path, curr_data, 0644)
-		items = curr_items
+		os.WriteFile(d.Db_path, curr_data, 0644)
+		d.Items = curr_items
 	} else {
-		err = os.WriteFile(Db_path, jsonData, 0644)
+		err = os.WriteFile(d.Db_path, jsonData, 0644)
 		if err != nil {
 			log.Println("Writing error: ", err)
 		}
-		err = json.Unmarshal(jsonData, &items)
+		err = json.Unmarshal(jsonData, &d.Items)
 		if err != nil {
 			log.Println("Unmarshaling error: ", err)
 		}
 	}
-	fmt.Printf("Data saved to %s\n", Db_path)
-	fmt.Printf("%d comics in file\n", len(items))
+	fmt.Printf("Data saved to %s\n", d.Db_path)
+	fmt.Printf("%d comics in file\n", len(d.Items))
 }
 
-func CheckDataBase(Db_path string) (int, map[int]bool) {
-	file, err := os.Open(Db_path)
+func (d *DataBase) CheckDataBase() (int, map[int]bool) {
+	file, err := os.Open(d.Db_path)
 	if err != nil {
 		fmt.Println("error opened file")
 	}
 	defer file.Close()
-	decoder := json.NewDecoder(file)
-	err = decoder.Decode(&items)
-	if err != nil {
-		fmt.Println("error json decoding")
-	}
-	comics_id := 1
+	json.NewDecoder(file).Decode(&d.Items)
+	res_id := 0
 	flag := false
 	exist := make(map[int]bool)
-	for ; comics_id < len(items); comics_id++ {
+	for comics_id := 1; comics_id < len(d.Items); comics_id++ {
 		if comics_id != 404 {
-			if _, ok := items[comics_id]; !ok {
+			if _, ok := d.Items[comics_id]; !ok {
 				if !flag {
-					break
+					res_id = comics_id
+					flag = true
 				}
 			} else {
 				exist[comics_id] = true
 			}
 		}
 	}
-	if comics_id == len(items) {
+	if res_id == 0 {
 		return 0, exist
 	}
-	fmt.Printf("Missed comics with id %d\n", comics_id)
-	return comics_id, exist
+	fmt.Printf("Missed comics with id %d\n", res_id)
+	return res_id, exist
 }
 
-func CreateIndexFile() {
-	var items map[int]Item
+func (d *DataBase) CreateIndexFile() {
 	if _, err := os.Stat("pkg/database/index.json"); err != nil {
-		file, _ := os.ReadFile("pkg/database/database.json")
 		data := make(map[string][]int)
-		_ = json.Unmarshal(file, &items)
-		for k, words := range items {
+		for k, words := range d.Items {
 			for _, word := range words.Keywords {
 				data[word] = append(data[word], k)
 			}
@@ -108,7 +100,7 @@ func CreateIndexFile() {
 		if err != nil {
 			fmt.Println("writing error")
 		}
-		index = data
+		d.Index = data
 	} else {
 		file, err := os.ReadFile("pkg/database/index.json")
 		if err != nil {
@@ -119,15 +111,18 @@ func CreateIndexFile() {
 		if err != nil {
 			fmt.Println("Unmarshaling error")
 		}
-		index = data
+		d.Index = data
 	}
 
 }
+func (d *DataBase) SizeDatabase() int {
+	return len(d.Items)
 
-func SearchDatabase(query []string) []string {
+}
+func (d *DataBase) SearchDatabase(query []string) []string {
 	var comics []string
 	stat := make(map[int]int)
-	for index, comic := range items {
+	for index, comic := range d.Items {
 		for _, query_word := range query {
 			for _, keyword := range comic.Keywords {
 				if query_word == keyword {
@@ -144,7 +139,7 @@ func SearchDatabase(query []string) []string {
 		return stat[keys[i]] > stat[keys[j]]
 	})
 	for _, k := range keys {
-		comic_url := items[k].URL
+		comic_url := d.Items[k].URL
 		comics = append(comics, comic_url)
 		if len(comics) >= 10 {
 			break
@@ -152,11 +147,11 @@ func SearchDatabase(query []string) []string {
 	}
 	return comics
 }
-func SearchByIndex(query []string) []string {
+func (d *DataBase) SearchByIndex(query []string) []string {
 	stat := make(map[int]int)
 	var comics []string
 	for _, v := range query {
-		if ids, found := index[v]; found {
+		if ids, found := d.Index[v]; found {
 			for _, i := range ids {
 				stat[i]++
 			}
@@ -170,7 +165,7 @@ func SearchByIndex(query []string) []string {
 		return stat[keys[i]] > stat[keys[j]]
 	})
 	for _, k := range keys {
-		comic_url := items[k].URL
+		comic_url := d.Items[k].URL
 		if found := slices.Contains(comics, comic_url); !found {
 			comics = append(comics, comic_url)
 		}

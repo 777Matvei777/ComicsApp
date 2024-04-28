@@ -10,6 +10,7 @@ type Config struct {
 	Url      string `yaml:"source_url"`
 	DbFile   string `yaml:"DbFile"`
 	Parallel int    `yaml:"parallel"`
+	Port     string `yaml:"port"`
 }
 
 func New(config string) *Config {

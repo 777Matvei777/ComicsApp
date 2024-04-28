@@ -3,8 +3,8 @@ package main
 import (
 	"context"
 	"flag"
-	"myapp/pkg/app"
 	"myapp/pkg/config"
+	"myapp/pkg/server"
 	"os"
 	"os/signal"
 	"syscall"
@@ -13,8 +13,6 @@ import (
 func main() {
 	var cs string
 	flag.StringVar(&cs, "c", "", "config path")
-	searchFlag := flag.String("s", "", "Search")
-	indexFlag := flag.Bool("i", false, "Index for searching")
 	flag.Parse()
 	cfg := config.New(cs)
 	ctx, cancelFunc := context.WithCancel(context.Background())
@@ -24,6 +22,6 @@ func main() {
 		<-ch
 		cancelFunc()
 	}()
-	app.Start(cfg.Url, cfg.DbFile, cfg.Parallel, ctx, 1)
-	app.SearhDatabase(searchFlag, indexFlag)
+	s := server.NewServer(cfg, ctx)
+	s.RunServer()
 }

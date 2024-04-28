@@ -27,7 +27,7 @@ func Parse(Url string, Parallel int, ctx context.Context, num int, exist map[int
 		case <-ctx.Done():
 			return Db
 		default:
-			if _, ok := exist[i]; !ok {
+			if !exist[i] {
 				ch <- i
 				wg.Add(1)
 				i := i
@@ -42,6 +42,9 @@ func Parse(Url string, Parallel int, ctx context.Context, num int, exist map[int
 						return
 					}
 					defer resp.Body.Close()
+					if resp.StatusCode == 404 && i == 404 {
+						return
+					}
 					if resp.StatusCode == 404 && i != 404 {
 						flag = true
 						return
