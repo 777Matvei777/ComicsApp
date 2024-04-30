@@ -10,26 +10,23 @@ import (
 
 type Server struct {
 	Router *http.ServeMux
-	Ctx    context.Context
 	Cfg    *config.Config
 }
 
 func NewServer(cfg *config.Config, ctx context.Context) *Server {
 	s := &Server{
 		Router: http.NewServeMux(),
-		Ctx:    ctx,
 		Cfg:    cfg,
 	}
-	s.initHandlers()
+	s.initHandlers(ctx)
 	return s
 }
 
-func (s *Server) initHandlers() {
+func (s *Server) initHandlers(ctx context.Context) {
 	comics := models.NewComic()
-	client := app.NewClient(s.Cfg, s.Ctx, 1)
+	client := app.NewClient(s.Cfg, ctx, 1)
 	h := Handler{
 		Cfg:    s.Cfg,
-		Ctx:    s.Ctx,
 		Comics: *comics,
 		Client: client,
 	}
