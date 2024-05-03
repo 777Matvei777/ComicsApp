@@ -19,7 +19,7 @@ type Client struct {
 	Db    *database.DataBase
 }
 
-func NewClient(cfg *config.Config, ctx context.Context, num int) *Client {
+func NewClient(cfg *config.Config, num int) *Client {
 	c := &Client{
 		Cfg:   cfg,
 		Num:   num,

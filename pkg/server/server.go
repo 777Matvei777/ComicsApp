@@ -1,7 +1,6 @@
 package server
 
 import (
-	"context"
 	"myapp/pkg/app"
 	"myapp/pkg/config"
 	"myapp/pkg/models"
@@ -11,20 +10,21 @@ import (
 type Server struct {
 	Router *http.ServeMux
 	Cfg    *config.Config
+	Serv   *http.Server
 }
 
-func NewServer(cfg *config.Config, ctx context.Context) *Server {
+func NewServer(cfg *config.Config) *Server {
 	s := &Server{
 		Router: http.NewServeMux(),
 		Cfg:    cfg,
 	}
-	s.initHandlers(ctx)
+	s.initHandlers()
 	return s
 }
 
-func (s *Server) initHandlers(ctx context.Context) {
+func (s *Server) initHandlers() {
 	comics := models.NewComic()
-	client := app.NewClient(s.Cfg, ctx, 1)
+	client := app.NewClient(s.Cfg, 1)
 	h := Handler{
 		Cfg:    s.Cfg,
 		Comics: *comics,
@@ -33,7 +33,12 @@ func (s *Server) initHandlers(ctx context.Context) {
 	s.Router.HandleFunc("GET /pics", h.getPicsHandler)
 	s.Router.HandleFunc("POST /update", h.updateComicsHandler)
 }
-
+func (s *Server) AddServer() {
+	s.Serv = &http.Server{
+		Addr:    s.Cfg.Port,
+		Handler: s.Router,
+	}
+}
 func (s *Server) RunServer() {
-	http.ListenAndServe(s.Cfg.Port, s.Router)
+	s.Serv.ListenAndServe()
 }

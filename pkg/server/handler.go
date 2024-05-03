@@ -35,8 +35,8 @@ func (h *Handler) updateComicsHandler(w http.ResponseWriter, r *http.Request) {
 		new_total := h.Client.SizeDatabase()
 		h.Comics.New = new_total - curr_total
 		h.Comics.Total = new_total
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(h.Comics)
 		mu.Unlock()
 	}
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(h.Comics)
 }
