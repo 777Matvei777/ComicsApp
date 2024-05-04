@@ -13,6 +13,7 @@ type Handler struct {
 	Cfg    *config.Config
 	Comics models.Comic
 	Client *app.Client
+	mu     sync.Mutex
 }
 
 func (h *Handler) getPicsHandler(w http.ResponseWriter, r *http.Request) {
@@ -27,9 +28,8 @@ func (h *Handler) getPicsHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) updateComicsHandler(w http.ResponseWriter, r *http.Request) {
-	var mu sync.Mutex
 	ctx := r.Context()
-	if mu.TryLock() {
+	if h.mu.TryLock() {
 		curr_total := h.Client.SizeDatabase()
 		h.Client.Start(ctx)
 		new_total := h.Client.SizeDatabase()
@@ -37,6 +37,6 @@ func (h *Handler) updateComicsHandler(w http.ResponseWriter, r *http.Request) {
 		h.Comics.Total = new_total
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(h.Comics)
-		mu.Unlock()
+		h.mu.Unlock()
 	}
 }
