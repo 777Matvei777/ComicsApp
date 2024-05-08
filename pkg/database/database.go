@@ -1,6 +1,7 @@
 package database
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -55,7 +56,7 @@ func (d *DataBase) CreateDataBase(data map[int]interface{}) {
 	fmt.Printf("%d comics in file\n", len(d.Items))
 }
 
-func (d *DataBase) CheckDataBase() (int, map[int]bool) {
+func (d *DataBase) CheckDataBase(ctx context.Context) (int, map[int]bool) {
 	file, err := os.Open(d.Db_path)
 	if err != nil {
 		fmt.Println("error opened file")
@@ -65,15 +66,20 @@ func (d *DataBase) CheckDataBase() (int, map[int]bool) {
 	res_id := 0
 	flag := false
 	exist := make(map[int]bool)
-	for comics_id := 1; comics_id < len(d.Items); comics_id++ {
-		if comics_id != 404 {
-			if _, ok := d.Items[comics_id]; !ok {
-				if !flag {
-					res_id = comics_id
-					flag = true
+	select {
+	case <-ctx.Done():
+		return res_id, exist
+	default:
+		for comics_id := 1; comics_id < len(d.Items); comics_id++ {
+			if comics_id != 404 {
+				if _, ok := d.Items[comics_id]; !ok {
+					if !flag {
+						res_id = comics_id
+						flag = true
+					}
+				} else {
+					exist[comics_id] = true
 				}
-			} else {
-				exist[comics_id] = true
 			}
 		}
 	}

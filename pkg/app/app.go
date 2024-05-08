@@ -14,16 +14,14 @@ import (
 
 type Client struct {
 	Cfg   *config.Config
-	Ctx   context.Context
 	Num   int
 	Exist map[int]bool
 	Db    *database.DataBase
 }
 
-func NewClient(cfg *config.Config, ctx context.Context, num int) *Client {
+func NewClient(cfg *config.Config, num int) *Client {
 	c := &Client{
 		Cfg:   cfg,
-		Ctx:   ctx,
 		Num:   num,
 		Exist: make(map[int]bool),
 		Db: &database.DataBase{
@@ -32,12 +30,12 @@ func NewClient(cfg *config.Config, ctx context.Context, num int) *Client {
 			Index:   make(map[string][]int),
 		},
 	}
-	go checkForNewComics(c)
+	checkForNewComics(22, 15, 0, c)
 	return c
 }
 
-func (c *Client) CreateJson() {
-	Db := xkcd.Parse(c.Cfg.Url, c.Cfg.Parallel, c.Ctx, c.Num, c.Exist)
+func (c *Client) CreateJson(ctx context.Context) {
+	Db := xkcd.Parse(c.Cfg.Url, c.Cfg.Parallel, ctx, c.Num, c.Exist)
 	data := make(map[int]interface{})
 	for i := 0; i < len(Db); i++ {
 		keywords := fmt.Sprintf("%s %s", (Db)[i].Alt, (Db)[i].Transcript)
@@ -51,33 +49,40 @@ func (c *Client) CreateJson() {
 	c.Db.CreateDataBase(data)
 }
 
-func (c *Client) Start() {
+func (c *Client) Start(ctx context.Context) {
 	exist_flag := false
 	if _, err := os.Stat(c.Cfg.DbFile); err == nil {
 		fmt.Println("File already exist")
 		exist_flag = true
 	}
 	if exist_flag {
-		c.Num, c.Exist = c.CheckDataBase()
+		c.Num, c.Exist = c.CheckDataBase(ctx)
 		if c.Num != 0 {
-			c.CreateJson()
+			c.CreateJson(ctx)
 		} else {
 			fmt.Println("All comics in file")
 		}
 	} else {
-		c.CreateJson()
+		c.CreateJson(ctx)
 	}
 	c.Db.CreateIndexFile()
 }
 
-func (c *Client) SearhDatabase(searchFlag string) []string {
-	normalized_query := words.Normalize(searchFlag)
-	comics_url := c.Db.SearchByIndex(normalized_query)
+func (c *Client) SearhDatabase(searchFlag string, ctx context.Context) []string {
+	comics_url := make([]string, 0)
+	select {
+	case <-ctx.Done():
+		return comics_url
+	default:
+		normalized_query := words.Normalize(searchFlag)
+		comics_url = c.Db.SearchByIndex(normalized_query)
+
+	}
 	return comics_url
 }
 
-func (c *Client) CheckDataBase() (int, map[int]bool) {
-	return c.Db.CheckDataBase()
+func (c *Client) CheckDataBase(ctx context.Context) (int, map[int]bool) {
+	return c.Db.CheckDataBase(ctx)
 
 }
 
@@ -85,9 +90,23 @@ func (c *Client) SizeDatabase() int {
 	return c.Db.SizeDatabase()
 }
 
-func checkForNewComics(c *Client) {
-	for {
-		c.Start()
-		time.Sleep(24 * time.Hour)
+func checkForNewComics(hour, min, sec int, c *Client) {
+	now := time.Now()
+	nextRun := time.Date(now.Year(), now.Month(), now.Day(), hour, min, sec, 0, now.Location())
+	if now.After(nextRun) {
+		nextRun = nextRun.Add(24 * time.Hour)
 	}
+	durationUntilNextRun := nextRun.Sub(now)
+
+	timer := time.NewTimer(durationUntilNextRun)
+
+	ctx := context.Background()
+
+	go func() {
+		for {
+			<-timer.C
+			c.Start(ctx)
+			timer.Reset(24 * time.Hour)
+		}
+	}()
 }
