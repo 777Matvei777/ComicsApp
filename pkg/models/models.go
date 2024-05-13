@@ -1,6 +1,7 @@
 package models
 
 type Item struct {
+	Id       int      `json:"id"`
 	URL      string   `json:"url"`
 	Keywords []string `json:"keywords"`
 }
@@ -12,6 +13,11 @@ type Comic struct {
 
 type ImageSearchResult struct {
 	URLs []string `json:"urls"`
+}
+
+type KeywordIndex struct {
+	Keyword string
+	Index   []int
 }
 
 func NewComic() *Comic {

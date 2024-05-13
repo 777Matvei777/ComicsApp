@@ -59,9 +59,6 @@ func Parse(Url string, Parallel int, ctx context.Context, num int, exist map[int
 					mutex.Lock()
 					Db = append(Db, oneData)
 					mutex.Unlock()
-					if i%100 == 0 {
-						fmt.Printf("Загружен %d-ый комикс\n", i)
-					}
 
 				}(i)
 			}
@@ -70,6 +67,5 @@ func Parse(Url string, Parallel int, ctx context.Context, num int, exist map[int
 	}
 	wg.Wait()
 	close(ch)
-	fmt.Printf("Загружено %d комиксов\n", len(Db))
 	return Db
 }
