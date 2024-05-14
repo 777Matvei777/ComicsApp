@@ -21,11 +21,11 @@ type PostgreSQL struct {
 }
 
 func NewPostgreSQL(connString string) (*PostgreSQL, error) {
+	latestVersion := 1
 	db, err := sql.Open("postgres", connString)
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Println(db.Ping())
 	driver, err := postgres.WithInstance(db, &postgres.Config{})
 	if err != nil {
 		log.Fatal(err)
@@ -35,8 +35,18 @@ func NewPostgreSQL(connString string) (*PostgreSQL, error) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	if err := m.Up(); err != nil {
+
+	version, dirty, err := m.Version()
+	if err != nil && err != migrate.ErrNilVersion {
 		log.Fatal(err)
+	}
+	if dirty {
+		log.Fatal("Database is in a dirty state")
+	}
+	if version < uint(latestVersion) {
+		if err := m.Up(); err != nil {
+			log.Fatal(err)
+		}
 	}
 
 	return &PostgreSQL{DB: db}, nil
@@ -47,17 +57,15 @@ func (p *PostgreSQL) CreateComic(value []models.Item) error {
 	if err != nil {
 		return err
 	}
-
+	defer tx.Rollback()
 	stmtComic, err := tx.Prepare("INSERT INTO comics (url) VALUES ($1) RETURNING id")
 	if err != nil {
-		tx.Rollback()
 		return err
 	}
 	defer stmtComic.Close()
 
 	stmtKeyword, err := tx.Prepare("INSERT INTO keywords (keyword, comic_id) VALUES ($1, $2)")
 	if err != nil {
-		tx.Rollback()
 		return err
 	}
 	defer stmtKeyword.Close()
@@ -66,14 +74,12 @@ func (p *PostgreSQL) CreateComic(value []models.Item) error {
 		var lastInsertId int
 		stmtComic.QueryRow(comic.URL).Scan(&lastInsertId)
 		if err != nil {
-			tx.Rollback()
 			return err
 		}
 
 		for _, keyword := range comic.Keywords {
 			_, err = stmtKeyword.Exec(keyword, lastInsertId)
 			if err != nil {
-				tx.Rollback()
 				return err
 			}
 		}
@@ -120,9 +126,9 @@ func (p *PostgreSQL) CreateIndex(keywordIndices []models.KeywordIndex) error {
 	if err != nil {
 		return err
 	}
+	defer tx.Rollback()
 	stmt, err := tx.Prepare("INSERT INTO keyword_index (keyword, comic_ids) VALUES ($1, $2) ON CONFLICT (keyword) DO UPDATE SET comic_ids = excluded.comic_ids")
 	if err != nil {
-		tx.Rollback()
 		return err
 	}
 	defer stmt.Close()
@@ -131,13 +137,11 @@ func (p *PostgreSQL) CreateIndex(keywordIndices []models.KeywordIndex) error {
 		indices := "{" + strings.Trim(strings.Join(strings.Fields(fmt.Sprint(ki.Index)), ","), "[]") + "}"
 		_, err = stmt.Exec(ki.Keyword, indices)
 		if err != nil {
-			tx.Rollback()
 			return err
 		}
 
 	}
 	if err := tx.Commit(); err != nil {
-		tx.Rollback()
 		return err
 	}
 	return nil

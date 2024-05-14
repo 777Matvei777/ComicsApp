@@ -19,6 +19,10 @@ func NewServer(cfg *config.Config) *Server {
 		Cfg:    cfg,
 	}
 	s.initHandlers()
+	s.Serv = &http.Server{
+		Addr:    s.Cfg.Port,
+		Handler: s.Router,
+	}
 	return s
 }
 
@@ -33,12 +37,7 @@ func (s *Server) initHandlers() {
 	s.Router.HandleFunc("GET /pics", h.getPicsHandler)
 	s.Router.HandleFunc("POST /update", h.updateComicsHandler)
 }
-func (s *Server) AddServer() {
-	s.Serv = &http.Server{
-		Addr:    s.Cfg.Port,
-		Handler: s.Router,
-	}
-}
+
 func (s *Server) RunServer() {
 	s.Serv.ListenAndServe()
 }

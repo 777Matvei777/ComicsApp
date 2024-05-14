@@ -6,3 +6,4 @@ bench:
 	go test -bench=. 
 server:
 	./xkcd -c config.yaml
+
