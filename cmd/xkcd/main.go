@@ -18,7 +18,7 @@ func main() {
 	flag.Parse()
 	cfg := config.New(cs)
 	s := server.NewServer(cfg)
-	s.AddServer()
+	//s.AddServer()
 	ch := make(chan os.Signal, 1)
 	signal.Notify(ch, syscall.SIGINT)
 	go func() {
