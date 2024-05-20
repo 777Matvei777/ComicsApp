@@ -20,3 +20,7 @@ CREATE TABLE users(
     pass text not null,
     role text not null
 );
+
+INSERT INTO users(username, pass, role) VALUES ("Matvei", "1234", "admin")
+INSERT INTO users(username, pass, role) VALUES ("Igor", "3456", "user")
+INSERT INTO users(username, pass, role) VALUES ("Artem", "4567", "user")
