@@ -13,3 +13,10 @@ CREATE TABLE keyword_index(
     keyword TEXT PRIMARY KEY,
     comic_ids INT[] NOT NULL
 );
+
+CREATE TABLE users(
+    id SERIAL PRIMARY KEY,
+    username text unique not null,
+    pass text not null,
+    role text not null
+);

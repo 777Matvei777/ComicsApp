@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"myapp/pkg/config"
@@ -9,7 +10,10 @@ import (
 	"myapp/pkg/models"
 	"myapp/pkg/words"
 	"myapp/pkg/xkcd"
+	"net/http"
 	"time"
+
+	"github.com/dgrijalva/jwt-go"
 )
 
 type Client struct {
@@ -113,4 +117,39 @@ func checkForNewComics(hour, min, sec int, c *Client) {
 			timer.Reset(24 * time.Hour)
 		}
 	}()
+}
+
+func (c *Client) LoginWithDb(w http.ResponseWriter, r *http.Request) {
+	var creds models.Credentials
+	err := json.NewDecoder(r.Body).Decode(&creds)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	var user models.User
+	err = c.Db.GetUserByusername(&user, &creds)
+	if err != nil {
+		http.Error(w, "Invalid credentials", http.StatusUnauthorized)
+		return
+	}
+
+	if creds.Password != user.Password {
+		http.Error(w, "Invalid credentials", http.StatusUnauthorized)
+		return
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"username": creds.Username,
+		"role":     user.Role,
+		"exp":      time.Now().Add(time.Minute * time.Duration(c.Cfg.Token_max_time)),
+	})
+
+	tokenString, err := token.SignedString([]byte("secret_key"))
+	if err != nil {
+		http.Error(w, "Error signing token", http.StatusInternalServerError)
+		return
+	}
+
+	w.Write([]byte(tokenString))
 }

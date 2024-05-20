@@ -20,6 +20,17 @@ type KeywordIndex struct {
 	Index   []int
 }
 
+type User struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+	Role     string `json:"role"`
+}
+
+type Credentials struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
+
 func NewComic() *Comic {
 	return &Comic{
 		New:   0,

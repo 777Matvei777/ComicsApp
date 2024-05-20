@@ -4,4 +4,7 @@ parallel: 100 #эмпирическим путем выявил, что тако
 #Почему то при использовании большего количества горутин вызывают проблемы то ли у меня на компьютере, то ли на сервере, из за чего запросы обрабатываются дольше и чаще с повреждениями
 #Поэтому 100 горутин кажутся наиболее оптимальными
 port: ":8080"
-postgresql: "host=localhost dbname=mydb user=postgres port=5432 password=local sslmode=disable" #dsn
+postgresql: "host=localhost dbname=postgres user=postgres port=5432 password=local sslmode=disable" #dsn
+token_max_time: 30
+concurrencyLimit: 5
+RateLimit: 2
