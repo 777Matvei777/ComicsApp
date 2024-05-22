@@ -18,7 +18,7 @@ CREATE TABLE users(
     id SERIAL PRIMARY KEY,
     username text unique not null,
     pass text not null,
-    role text not null
+    roles text not null
 );
 
 INSERT INTO users(username, pass, roles) VALUES ("Matvei", "1234", "admin");
