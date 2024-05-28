@@ -27,6 +27,7 @@ type Handler struct {
 func (h *Handler) getPicsHandler(w http.ResponseWriter, r *http.Request) {
 	if !h.limiter.Allow() {
 		http.Error(w, "Rate limit exceeded", http.StatusTooManyRequests)
+		return
 	}
 	h.sem <- struct{}{}
 	defer func() { <-h.sem }()
