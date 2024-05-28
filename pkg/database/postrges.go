@@ -252,7 +252,7 @@ func (p *PostgreSQL) SizeDatabase() (int, error) {
 }
 
 func (p *PostgreSQL) GetUserByusername(user *models.User, creds *models.Credentials) error {
-	err := p.DB.QueryRow("SELECT username, pass, role FROM users WHERE username = $1", creds.Username).Scan(&user.Username, &user.Password, &user.Role)
+	err := p.DB.QueryRow("SELECT username, pass, roles FROM users WHERE username = $1", creds.Username).Scan(&user.Username, &user.Password, &user.Role)
 	if err != nil {
 		return err
 	}
