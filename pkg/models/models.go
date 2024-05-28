@@ -1,11 +1,24 @@
 package models
 
+import "context"
+
 type Item struct {
 	Id       int      `json:"id"`
 	URL      string   `json:"url"`
 	Keywords []string `json:"keywords"`
 }
 
+type Database interface {
+	GetUrlByComicId(id int) string
+	GetComicDatabase() map[int]bool
+	CheckDataBase(ctx context.Context) (int, map[int]bool)
+	SizeDatabase() (int, error)
+	GetUserByusername(user *User, creds *Credentials) error
+	CreateComic(value []Item) error
+	BuildIndex() ([]KeywordIndex, error)
+	CreateIndex(keywordIndices []KeywordIndex) error
+	GetComicsByQuery(searchQuery []string) []string
+}
 type Comic struct {
 	New   int `json:"new"`
 	Total int `json:"total"`

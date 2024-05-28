@@ -22,7 +22,7 @@ CREATE TABLE users(
 );
 
 
-INSERT INTO users(username, pass, roles) VALUES ("Matvei", "1234", "admin");
-INSERT INTO users(username, pass, roles) VALUES ("Igor", "3456", "user");
-INSERT INTO users(username, pass, roles) VALUES ("Artem", "4567", "user");
+INSERT INTO users(username, pass, roles) VALUES ('Matvei', '1234', 'admin');
+INSERT INTO users(username, pass, roles) VALUES ('Igor', '3456', 'user');
+INSERT INTO users(username, pass, roles) VALUES ('Artem', '4567', 'user');
 

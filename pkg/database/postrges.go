@@ -31,7 +31,7 @@ func NewPostgreSQL(connString string) (*PostgreSQL, error) {
 		log.Fatal(err)
 	}
 
-	m, err := migrate.NewWithDatabaseInstance("file://migrations", "mydb", driver)
+	m, err := migrate.NewWithDatabaseInstance("file://migrations", "postgres", driver)
 	if err != nil {
 		log.Fatal(err)
 	}

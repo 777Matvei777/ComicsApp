@@ -20,7 +20,7 @@ type Client struct {
 	Cfg   *config.Config
 	Num   int
 	Exist map[int]bool
-	Db    *database.PostgreSQL
+	Db    models.Database
 }
 
 func NewClient(cfg *config.Config, num int) *Client {
@@ -150,6 +150,5 @@ func (c *Client) LoginWithDb(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Error signing token", http.StatusInternalServerError)
 		return
 	}
-
 	w.Write([]byte(tokenString))
 }
