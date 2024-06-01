@@ -56,6 +56,6 @@ func (s *Server) initHandlers() {
 func (s *Server) RunServer() {
 	err := s.Serv.ListenAndServe()
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("server listen error", err)
 	}
 }
