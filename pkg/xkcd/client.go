@@ -46,7 +46,9 @@ func Parse(Url string, Parallel int, ctx context.Context, num int, exist map[int
 						return
 					}
 					if resp.StatusCode == 404 && i != 404 {
+						mutex.Lock()
 						flag = true
+						mutex.Unlock()
 						return
 					}
 					var oneData XkcdStruct

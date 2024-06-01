@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"log"
 	"myapp/pkg/config"
 	"myapp/pkg/server"
 	"os"
@@ -16,7 +17,10 @@ func main() {
 	var cs string
 	flag.StringVar(&cs, "c", "", "config path")
 	flag.Parse()
-	cfg := config.New(cs)
+	cfg, err := config.New("config.yaml")
+	if err != nil {
+		log.Fatal(err)
+	}
 	s := server.NewServer(cfg)
 	//s.AddServer()
 	ch := make(chan os.Signal, 1)

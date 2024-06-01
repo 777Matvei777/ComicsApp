@@ -1,6 +1,9 @@
 package models
 
-import "context"
+import (
+	"context"
+	"net/http"
+)
 
 type Item struct {
 	Id       int      `json:"id"`
@@ -18,6 +21,15 @@ type Database interface {
 	BuildIndex() ([]KeywordIndex, error)
 	CreateIndex(keywordIndices []KeywordIndex) error
 	GetComicsByQuery(searchQuery []string) []string
+}
+
+type Client interface {
+	CreateDataBase(ctx context.Context)
+	Start(ctx context.Context)
+	SearhDatabase(searchFlag string, ctx context.Context) []string
+	CheckDataBase(ctx context.Context) (int, map[int]bool)
+	SizeDatabase() (int, error)
+	LoginWithDb(w http.ResponseWriter, r *http.Request)
 }
 type Comic struct {
 	New   int `json:"new"`

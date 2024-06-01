@@ -40,6 +40,7 @@ func NewClient(cfg *config.Config, num int) *Client {
 
 func (c *Client) CreateDataBase(ctx context.Context) {
 	Db := xkcd.Parse(c.Cfg.Url, c.Cfg.Parallel, ctx, c.Num, c.Exist)
+	log.Println(Db)
 	values := make([]models.Item, 0)
 	for i := 0; i < len(Db); i++ {
 		keywords := fmt.Sprintf("%s %s", (Db)[i].Alt, (Db)[i].Transcript)
@@ -69,7 +70,11 @@ func (c *Client) Start(ctx context.Context) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	c.Db.CreateIndex(index)
+	err = c.Db.CreateIndex(index)
+	if err != nil {
+		log.Println(err)
+	}
+
 }
 
 func (c *Client) SearhDatabase(searchFlag string, ctx context.Context) []string {
@@ -150,5 +155,8 @@ func (c *Client) LoginWithDb(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Error signing token", http.StatusInternalServerError)
 		return
 	}
-	w.Write([]byte(tokenString))
+	_, err = w.Write([]byte(tokenString))
+	if err != nil {
+		log.Fatal("error writing")
+	}
 }

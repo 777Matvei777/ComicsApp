@@ -57,7 +57,21 @@ func (p *PostgreSQL) CreateComic(value []models.Item) error {
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback()
+	//defer tx.Rollback()
+	defer func() {
+		if p := recover(); p != nil {
+			err = tx.Rollback()
+			if err != nil {
+				log.Fatal("error rollback")
+			}
+			panic(p)
+		} else if err != nil {
+			err = tx.Rollback()
+			if err != nil {
+				log.Fatal("error rollback")
+			}
+		}
+	}()
 	stmtComic, err := tx.Prepare("INSERT INTO comics (url) VALUES ($1) RETURNING id")
 	if err != nil {
 		return err
@@ -72,7 +86,7 @@ func (p *PostgreSQL) CreateComic(value []models.Item) error {
 
 	for id, comic := range value {
 		var lastInsertId int
-		stmtComic.QueryRow(comic.URL).Scan(&lastInsertId)
+		err = stmtComic.QueryRow(comic.URL).Scan(&lastInsertId)
 		if err != nil {
 			return err
 		}
@@ -126,7 +140,21 @@ func (p *PostgreSQL) CreateIndex(keywordIndices []models.KeywordIndex) error {
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback()
+	//defer tx.Rollback()
+	defer func() {
+		if p := recover(); p != nil {
+			err = tx.Rollback()
+			if err != nil {
+				log.Fatal("error rollback")
+			}
+			panic(p)
+		} else if err != nil {
+			err = tx.Rollback()
+			if err != nil {
+				log.Fatal("error rollback")
+			}
+		}
+	}()
 	stmt, err := tx.Prepare("INSERT INTO keyword_index (keyword, comic_ids) VALUES ($1, $2) ON CONFLICT (keyword) DO UPDATE SET comic_ids = excluded.comic_ids")
 	if err != nil {
 		return err
@@ -192,7 +220,10 @@ func (p *PostgreSQL) GetComicsByQuery(searchQuery []string) []string {
 func (p *PostgreSQL) GetUrlByComicId(id int) string {
 	row := p.DB.QueryRow("SELECT url FROM comics WHERE id=$1", id)
 	var comic_url string
-	row.Scan(&comic_url)
+	err := row.Scan(&comic_url)
+	if err != nil {
+		log.Fatal("error scan comic_url")
+	}
 	return comic_url
 }
 
@@ -203,7 +234,10 @@ func (p *PostgreSQL) GetComicDatabase() map[int]bool {
 	data := make(map[int]bool)
 	for rows.Next() {
 		var id int
-		rows.Scan(&id)
+		err := rows.Scan(&id)
+		if err != nil {
+			log.Fatal("error scan id")
+		}
 
 		data[id] = true
 	}

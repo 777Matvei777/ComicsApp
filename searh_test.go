@@ -2,6 +2,7 @@ package benching
 
 import (
 	"encoding/json"
+	"log"
 	"myapp/pkg/models"
 	"myapp/pkg/words"
 	"os"
@@ -14,7 +15,10 @@ var Items map[int]models.Item
 
 func SearchDatabase(query []string) {
 	file, _ := os.Open("myapp/pkg/database/database.json")
-	json.NewDecoder(file).Decode(&Items)
+	err := json.NewDecoder(file).Decode(&Items)
+	if err != nil {
+		log.Fatal("error json decode")
+	}
 	var comics []string
 	stat := make(map[int]int)
 	for index, comic := range Items {
@@ -45,7 +49,10 @@ func SearchDatabase(query []string) {
 func SearchByIndex(query []string) {
 	file, _ := os.Open("myapp/pkg/database/index.json")
 	Index := make(map[string][]int)
-	json.NewDecoder(file).Decode(&Index)
+	err := json.NewDecoder(file).Decode(&Index)
+	if err != nil {
+		log.Fatal("error json decode")
+	}
 	stat := make(map[int]int)
 	var comics []string
 	for _, v := range query {

@@ -1,7 +1,7 @@
 package config
 
 import (
-	"log"
+	"errors"
 
 	"github.com/ilyakaznacheev/cleanenv"
 )
@@ -17,11 +17,11 @@ type Config struct {
 	RateLimit        int    `yaml:"rateLimit"`
 }
 
-func New(config string) *Config {
+func New(config string) (*Config, error) {
 	var cfg Config
 
 	if err := cleanenv.ReadConfig(config, &cfg); err != nil {
-		log.Fatalf("can't read config: %s", err)
+		return nil, errors.New("can't read config: " + err.Error())
 	}
-	return &cfg
+	return &cfg, nil
 }

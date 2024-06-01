@@ -17,7 +17,7 @@ import (
 type Handler struct {
 	Cfg     *config.Config
 	Comics  models.Comic
-	Client  *app.Client
+	Client  models.Client
 	mu      sync.Mutex
 	sem     chan struct{}
 	limiter *rate.Limiter
@@ -38,7 +38,10 @@ func (h *Handler) getPicsHandler(w http.ResponseWriter, r *http.Request) {
 		URLs: comics,
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(results)
+	err := json.NewEncoder(w).Encode(results)
+	if err != nil {
+		log.Fatal("error json encoding")
+	}
 }
 
 func (h *Handler) loginHandler(w http.ResponseWriter, r *http.Request, client *app.Client) {
@@ -62,7 +65,10 @@ func (h *Handler) updateComicsHandler(w http.ResponseWriter, r *http.Request) {
 		h.Comics.New = new_total - curr_total
 		h.Comics.Total = new_total
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(h.Comics)
+		err = json.NewEncoder(w).Encode(h.Comics)
+		if err != nil {
+			log.Fatal("error json encode")
+		}
 		h.mu.Unlock()
 	}
 }

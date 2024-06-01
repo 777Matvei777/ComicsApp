@@ -1,6 +1,7 @@
 package server
 
 import (
+	"log"
 	"myapp/pkg/app"
 	"myapp/pkg/config"
 	"myapp/pkg/models"
@@ -53,5 +54,8 @@ func (s *Server) initHandlers() {
 }
 
 func (s *Server) RunServer() {
-	s.Serv.ListenAndServe()
+	err := s.Serv.ListenAndServe()
+	if err != nil {
+		log.Fatal(err)
+	}
 }
