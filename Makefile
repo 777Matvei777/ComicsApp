@@ -6,8 +6,9 @@ server:
 	./xkcd -c config.yaml
 
 test:
-	go test -cover ./...
-
+	go test -coverprofile=coverage.out  ./...
+	echo "generating html"
+	go tool cover -html="coverage.out" 
 
 lint:
 	golangci-lint run --fix --tests  ./...
