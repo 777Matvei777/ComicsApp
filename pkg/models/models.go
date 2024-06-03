@@ -23,6 +23,10 @@ type Database interface {
 	GetComicsByQuery(searchQuery []string) []string
 }
 
+type Server interface {
+	InitHandlers()
+	RunServer()
+}
 type Client interface {
 	CreateDataBase(ctx context.Context)
 	Start(ctx context.Context)

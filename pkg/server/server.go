@@ -17,7 +17,13 @@ type Server struct {
 	Serv   *http.Server
 }
 
-func NewServer(cfg *config.Config) *Server {
+var NewServer func(cfg *config.Config) *Server
+
+func init() {
+	NewServer = defaultNewServer
+}
+
+func defaultNewServer(cfg *config.Config) *Server {
 	s := &Server{
 		Router: http.NewServeMux(),
 		Cfg:    cfg,
