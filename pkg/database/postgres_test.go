@@ -3,7 +3,6 @@ package database
 import (
 	"context"
 	"fmt"
-	"log"
 	"myapp/pkg/models"
 	"reflect"
 	"strings"
@@ -14,32 +13,31 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// func NewMock() (*sql.DB, sqlmock.Sqlmock) {
-// 	db, mock, err := sqlmock.New()
-// 	if err != nil {
-// 		panic(err)
-// 	}
-// 	return db, mock
-// }
+func TestCheckDataBaseWithMissedComic(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
+	defer cancel()
 
-type MockPostgreSQL struct {
-	PostgreSQL
-}
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer db.Close()
 
-// GetComicDatabase - мок метода, возвращающего тестовые данные.
-func (m *MockPostgreSQL) GetComicDatabase() map[int]bool {
-	log.Println("jajaja")
-	return map[int]bool{
-		1: true,
-		2: true,
-		// Предположим, что у нас есть пропуск в данных для комикса с ID 3.
-		4: true,
-		// ID 404 специально пропущен, как указано в логике функции.
-		405: true,
+	p := &PostgreSQL{DB: db}
+	rows := sqlmock.NewRows([]string{"id"}).
+		AddRow(1).
+		AddRow(2).
+		AddRow(3).
+		AddRow(5).
+		AddRow(6).
+		AddRow(7)
+	mock.ExpectQuery("SELECT id FROM comics").WillReturnRows(rows)
+	res_id, _ := p.CheckDataBase(ctx)
+	expectedResID := 4
+	if res_id != expectedResID {
+		t.Errorf("CheckDataBase() res_id = %d, want %d", res_id, expectedResID)
 	}
 }
-
-// TestCheckDataBase - тест для функции CheckDataBase.
 func TestCheckDataBase(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
 	defer cancel()
