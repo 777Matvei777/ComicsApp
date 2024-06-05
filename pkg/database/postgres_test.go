@@ -1,25 +1,82 @@
 package database
 
 import (
-	"database/sql"
+	"context"
 	"fmt"
+	"log"
 	"myapp/pkg/models"
 	"reflect"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/stretchr/testify/assert"
 )
 
-func NewMock() (*sql.DB, sqlmock.Sqlmock) {
-	db, mock, err := sqlmock.New()
-	if err != nil {
-		panic(err)
-	}
-	return db, mock
+// func NewMock() (*sql.DB, sqlmock.Sqlmock) {
+// 	db, mock, err := sqlmock.New()
+// 	if err != nil {
+// 		panic(err)
+// 	}
+// 	return db, mock
+// }
+
+type MockPostgreSQL struct {
+	PostgreSQL
 }
 
+// GetComicDatabase - мок метода, возвращающего тестовые данные.
+func (m *MockPostgreSQL) GetComicDatabase() map[int]bool {
+	log.Println("jajaja")
+	return map[int]bool{
+		1: true,
+		2: true,
+		// Предположим, что у нас есть пропуск в данных для комикса с ID 3.
+		4: true,
+		// ID 404 специально пропущен, как указано в логике функции.
+		405: true,
+	}
+}
+
+// TestCheckDataBase - тест для функции CheckDataBase.
+func TestCheckDataBase(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
+	defer cancel()
+
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer db.Close()
+
+	p := &PostgreSQL{DB: db}
+
+	rows := sqlmock.NewRows([]string{"id"}).
+		AddRow(1).
+		AddRow(2).
+		AddRow(3)
+	mock.ExpectQuery("SELECT id FROM comics").WillReturnRows(rows)
+
+	res_id, exist := p.CheckDataBase(ctx)
+
+	// Проверяем, что функция возвращает правильный ID первого пропущенного комикса.
+	expectedResID := 0
+	if res_id != expectedResID {
+		t.Errorf("CheckDataBase() res_id = %d, want %d", res_id, expectedResID)
+	}
+	expectedExist := map[int]bool{1: true, 2: true}
+	for id, e := range expectedExist {
+		if exist[id] != e {
+			t.Errorf("CheckDataBase() exist[%d] = %v, want %v", id, exist[id], e)
+		}
+	}
+
+	// Проверяем, что функция не возвращает несуществующие комиксы.
+	if len(exist) != len(expectedExist) {
+		t.Errorf("CheckDataBase() returned unexpected number of existing comics: got %v, want %v", len(exist), len(expectedExist))
+	}
+}
 func TestCreateComic(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	if err != nil {
