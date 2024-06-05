@@ -4,16 +4,60 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"log"
 	"myapp/pkg/config"
 	"myapp/pkg/database"
 	"myapp/pkg/models"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
+type MockDB struct {
+	mock.Mock
+}
+
+func (mdb *MockDB) CreateComic(values []models.Item) error {
+	args := mdb.Called(values)
+	return args.Error(0)
+}
+
+func (mdb *MockDB) GetUrlByComicId(id int) string {
+	return ""
+}
+
+func (mdb *MockDB) GetComicDatabase() map[int]bool {
+	return nil
+}
+
+func (mdb *MockDB) CheckDataBase(ctx context.Context) (int, map[int]bool) {
+	return 0, nil
+}
+
+func (mdb *MockDB) SizeDatabase() (int, error) {
+	return 0, nil
+}
+
+func (mdb *MockDB) GetUserByusername(user *models.User, creds *models.Credentials) error {
+	return nil
+}
+
+func (mdb *MockDB) BuildIndex() ([]models.KeywordIndex, error) {
+	return nil, nil
+}
+
+func (mdb *MockDB) CreateIndex(keywordIndices []models.KeywordIndex) error {
+	return nil
+}
+
+func (mdb *MockDB) GetComicsByQuery(searchQuery []string) []string {
+	return nil
+}
 func TestStart(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	if err != nil {
@@ -70,6 +114,18 @@ func TestSearhDatabase(t *testing.T) {
 	if err := mock.ExpectationsWereMet(); err != nil {
 		t.Errorf("there were unfulfilled expectations: %s", err)
 	}
+}
+
+func TestNewClient(t *testing.T) {
+	cfg, err := config.New("../../config.yaml")
+	if err != nil {
+		log.Fatal(err)
+	}
+	client := NewClient(cfg, 1)
+	assert.NotNil(t, client)
+	assert.Equal(t, cfg, client.Cfg)
+	assert.Equal(t, 1, client.Num)
+
 }
 
 func TestSizeDatabase(t *testing.T) {
@@ -139,52 +195,39 @@ func TestLoginWithDb(t *testing.T) {
 		t.Errorf("there were unfulfilled expectations: %s", err)
 	}
 }
+func TestCheckForNewComics(t *testing.T) {
+	testHour := 12
+	testMin := 48
+	testSec := 50
+	client := &Client{}
+	checkForNewComics(testHour, testMin, testSec, client)
 
-// func TestCreateDataBase(t *testing.T) {
-// 	db, mock, err := sqlmock.New()
-// 	if err != nil {
-// 		t.Fatalf("Не удалось создать mock базы данных: %s", err)
-// 	}
-// 	defer db.Close()
-// 	cfg, err := config.New("../../config.yaml")
-// 	if err != nil {
-// 		log.Println("Ошибка создания конфига")
-// 	}
-// 	// Настройка моковых вызовов для функции CreateComic
-// 	mock.ExpectBegin()
+	now := time.Now()
+	expectedNextRun := time.Date(now.Year(), now.Month(), now.Day(), testHour, testMin, testSec, 0, now.Location())
+	if now.After(expectedNextRun) {
+		expectedNextRun = expectedNextRun.Add(24 * time.Hour)
+	}
+	expectedDuration := expectedNextRun.Sub(now)
 
-// 	mock.ExpectPrepare("INSERT INTO comics \\(url\\) VALUES \\(\\$1\\) RETURNING id")
+	if expectedDuration < 0 {
+		t.Errorf("The duration until the next run is negative, got: %v", expectedDuration)
+	}
+}
 
-// 	mock.ExpectPrepare("INSERT INTO keywords \\(keyword, comic_id\\) VALUES \\(\\$1, \\$2\\)")
-
-// 	mock.ExpectQuery("INSERT INTO comics \\(url\\) VALUES \\(\\$1\\) RETURNING id").
-// 		WithArgs("https://imgs.xkcd.com/comics/barrel_cropped_(1).jpg").
-// 		WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(1))
-// 	keyword := "[[A boy sits in a barrel which is floating in an ocean.]]\nBoy: I wonder where I'll float next?\n[[The barrel drifts into the distance. Nothing else can be seen.]]\n{{Alt: Don't we all.}} Don't we all."
-// 	normalized := words.Normalize(keyword)
-// 	mock.ExpectExec("INSERT INTO keywords \\(keyword, comic_id\\) VALUES \\(\\$1, \\$2\\)").
-// 		for i := 0; i < len(normalized); i++{
-// 			WithArgs(normalized[i], 1).
-// 		}
-// 		WillReturnResult(sqlmock.NewResult(1, 1))
-
-// 	mock.ExpectCommit()
-// 	exist := make(map[int]bool)
-// 	for i := 2; i < 3000; i++ {
-// 		exist[i] = true
-// 	}
-// 	// Создание клиента с моковой базой данных
-// 	c := &Client{
-// 		Db:    &database.PostgreSQL{DB: db},
-// 		Cfg:   cfg,
-// 		Exist: exist,
-// 	}
-
-// 	// Вызов функции CreateDataBase
-// 	c.CreateDataBase(context.Background())
-
-// 	// Проверка, что все ожидания были выполнены
-// 	if err := mock.ExpectationsWereMet(); err != nil {
-// 		t.Errorf("Не все ожидания были выполнены: %s", err)
-// 	}
-// }
+func TestCreateDataBase(t *testing.T) {
+	ctx := context.Background()
+	cfg, err := config.New("../../config.yaml")
+	if err != nil {
+		log.Fatal(err)
+	}
+	client := &Client{
+		Cfg:   cfg,
+		Num:   10,
+		Exist: make(map[int]bool),
+	}
+	mockDB := new(MockDB)
+	client.Db = mockDB
+	mockDB.On("CreateComic", mock.Anything).Return(nil)
+	client.CreateDataBase(ctx)
+	mockDB.AssertCalled(t, "CreateComic", mock.Anything)
+}

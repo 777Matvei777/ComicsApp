@@ -11,6 +11,10 @@ type Item struct {
 	Keywords []string `json:"keywords"`
 }
 
+type Config interface {
+	New(config string) (*Config, error)
+}
+
 type Database interface {
 	GetUrlByComicId(id int) string
 	GetComicDatabase() map[int]bool
