@@ -11,6 +11,10 @@ type Item struct {
 	Keywords []string `json:"keywords"`
 }
 
+type Config interface {
+	New(config string) (*Config, error)
+}
+
 type Database interface {
 	GetUrlByComicId(id int) string
 	GetComicDatabase() map[int]bool
@@ -23,6 +27,10 @@ type Database interface {
 	GetComicsByQuery(searchQuery []string) []string
 }
 
+type Server interface {
+	InitHandlers()
+	RunServer()
+}
 type Client interface {
 	CreateDataBase(ctx context.Context)
 	Start(ctx context.Context)

@@ -62,13 +62,13 @@ func (p *PostgreSQL) CreateComic(value []models.Item) error {
 		if p := recover(); p != nil {
 			err = tx.Rollback()
 			if err != nil {
-				log.Fatal("error rollback")
+				log.Println("error rollback", err)
 			}
 			panic(p)
 		} else if err != nil {
 			err = tx.Rollback()
 			if err != nil {
-				log.Fatal("error rollback")
+				log.Println("error rollback", err)
 			}
 		}
 	}()

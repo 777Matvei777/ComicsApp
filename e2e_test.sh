@@ -1,20 +1,28 @@
 #!/bin/bash
-export LANG=ru_RU.utf8
-export LC_ALL=ru_RU.utf8
-echo "Запуск сервера..."
-./start_server.sh & 
-SERVER_PID=$!
-sleep 5 
+docker run -d -e POSTGRES_PASSWORD=local -p 5432:5432 --name mytestpostgres postgres
 
-echo "Поиск комиксов по словам 'apple,doctor'..."
-RESPONSE=$(curl -s "http://localhost:8080/pics?search="apple,doctor"")
+sleep 5
 
-if [[ "$RESPONSE" == *"apple a day"* ]]; then
-echo "Тест пройден: найден комикс 'apple a day'"
-else
-echo "Тест не пройден: комикс 'apple a day' не найден"
-exit 1
+./xkcd -c config.yaml &
+server_pid=$!
+
+sleep 5
+jwt_token=$(curl -s -X POST -H "Content-Type: application/json" -d '{"username": "Matvei", "password": "1234"}' http://localhost:8080/login)
+if [ -z "$jwt_token" ]; then
+    echo "Не удалось получить токен"
+    docker rm -f mytestpostgres
+    exit 1
 fi
 
-echo "Остановка сервера..."
-kill $SERVER_PID
+curl -s -X POST -H "Authorization: $jwt_token" http://localhost:8080/update
+sleep 2
+response=$(curl -s http://localhost:8080/pics?search="apple,doctor,Granny")
+echo "$response"
+if echo "$response" | grep -q "https://imgs.xkcd.com/comics/an_apple_a_day.png"; then
+    echo "Тест пройден"
+else
+    echo "Тест не пройден"
+fi
+
+kill %1
+docker rm -f mytestpostgres

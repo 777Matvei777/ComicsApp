@@ -17,7 +17,13 @@ type Server struct {
 	Serv   *http.Server
 }
 
-func NewServer(cfg *config.Config) *Server {
+var NewServer func(cfg *config.Config) *Server
+
+func init() {
+	NewServer = defaultNewServer
+}
+
+func defaultNewServer(cfg *config.Config) *Server {
 	s := &Server{
 		Router: http.NewServeMux(),
 		Cfg:    cfg,
@@ -56,6 +62,6 @@ func (s *Server) initHandlers() {
 func (s *Server) RunServer() {
 	err := s.Serv.ListenAndServe()
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("server listen error", err)
 	}
 }
