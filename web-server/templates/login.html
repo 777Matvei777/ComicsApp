@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Login</title>
+</head>
+<body>
+{{if .Error}}
+<div>{{.Error}}</div>
+{{end}}
+<form method="post">
+Username: <input type="text" name="username">
+
+Password: <input name="password" type="password">
+
+<input type="submit">
+</form>
+</body>
+</html>

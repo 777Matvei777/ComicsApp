@@ -18,3 +18,6 @@ sec:
 	govulncheck ./...
 e2e:
 	@./e2e_test.sh
+
+web:
+	go run web-server/main.go

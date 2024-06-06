@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Comics</title>
+</head>
+<body>
+<form method="get">
+Search: <input name="search">
+
+<input type="submit">
+</form>
+{{if .SearchQuery}}
+<div>Результаты поиска для '{{.SearchQuery}}':</div>
+{{range .Comics}}
+<div><img src="{{.}}" alt="Comic"></div>
+{{end}}
+{{end}}
+</body>
+</html>
