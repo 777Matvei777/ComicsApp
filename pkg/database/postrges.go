@@ -98,7 +98,7 @@ func (p *PostgreSQL) CreateComic(value []models.Item) error {
 			}
 		}
 		if id%100 == 0 {
-			fmt.Printf("Загружен %d комикс\n", id)
+			fmt.Printf("Download %d comics\n", id)
 		}
 	}
 	return tx.Commit()

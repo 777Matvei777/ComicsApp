@@ -39,7 +39,7 @@ func Parse(Url string, Parallel int, ctx context.Context, num int, exist map[int
 					address := fmt.Sprintf("%s/%d/info.0.json", Url, i)
 					resp, err := http.Get(address)
 					if err != nil {
-						log.Println("getting error:", err)
+						log.Println("Error GET comics", err)
 						return
 					}
 					defer resp.Body.Close()
@@ -55,7 +55,7 @@ func Parse(Url string, Parallel int, ctx context.Context, num int, exist map[int
 					var oneData XkcdStruct
 					data, err := io.ReadAll(resp.Body)
 					if err != nil {
-						log.Println("reading error:", err)
+						log.Println("Error reading responce", err)
 						return
 					}
 					_ = json.Unmarshal([]byte(data), &oneData)
