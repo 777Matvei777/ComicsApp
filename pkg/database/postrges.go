@@ -57,7 +57,6 @@ func (p *PostgreSQL) CreateComic(value []models.Item) error {
 	if err != nil {
 		return err
 	}
-	//defer tx.Rollback()
 	defer func() {
 		if p := recover(); p != nil {
 			err = tx.Rollback()
@@ -140,18 +139,17 @@ func (p *PostgreSQL) CreateIndex(keywordIndices []models.KeywordIndex) error {
 	if err != nil {
 		return err
 	}
-	//defer tx.Rollback()
 	defer func() {
 		if p := recover(); p != nil {
 			err = tx.Rollback()
 			if err != nil {
-				log.Fatal("error rollback")
+				log.Fatal("error rollback", err)
 			}
 			panic(p)
 		} else if err != nil {
 			err = tx.Rollback()
 			if err != nil {
-				log.Fatal("error rollback")
+				log.Fatal("error rollback", err)
 			}
 		}
 	}()
