@@ -20,7 +20,7 @@ type PostgreSQL struct {
 	DB *sql.DB
 }
 
-func NewPostgreSQL(connString string) (*PostgreSQL, error) {
+func NewPostgreSQL(connString, migrationPath string) (*PostgreSQL, error) {
 	latestVersion := 1
 	db, err := sql.Open("postgres", connString)
 	if err != nil {
@@ -31,7 +31,7 @@ func NewPostgreSQL(connString string) (*PostgreSQL, error) {
 		log.Fatal(err)
 	}
 
-	m, err := migrate.NewWithDatabaseInstance("file://migrations", "postgres", driver)
+	m, err := migrate.NewWithDatabaseInstance(migrationPath, "postgres", driver)
 	if err != nil {
 		log.Fatal(err)
 	}
