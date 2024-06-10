@@ -29,7 +29,7 @@ func NewClient(cfg *config.Config, num int) *Client {
 		Num:   num,
 		Exist: make(map[int]bool),
 	}
-	Db, err := database.NewPostgreSQL(cfg.Postgresql)
+	Db, err := database.NewPostgreSQL(cfg.Postgresql, "file://../../migrations")
 	if err != nil {
 		log.Fatal(err)
 	}

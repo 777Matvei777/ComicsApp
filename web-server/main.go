@@ -76,7 +76,7 @@ func main() {
 			http.SetCookie(w, &http.Cookie{
 				Name:    "Authorization",
 				Value:   tokenString,
-				Expires: time.Now().Add(24 * time.Hour),
+				Expires: time.Now().Add(12 * time.Hour),
 			})
 
 			http.Redirect(w, r, "/comics", http.StatusFound)

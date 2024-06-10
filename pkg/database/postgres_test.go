@@ -334,7 +334,7 @@ func TestNewPostgreSQL(t *testing.T) {
 	}
 	defer db.Close()
 
-	pg, err := NewPostgreSQL("host=localhost dbname=postgres user=postgres port=5432 password=local sslmode=disable")
+	pg, err := NewPostgreSQL("host=localhost dbname=postgres user=postgres port=5432 password=local sslmode=disable", "file://../../migrations")
 
 	if err != nil {
 		t.Errorf("error was not expected while creating PostgreSQL: %s", err)

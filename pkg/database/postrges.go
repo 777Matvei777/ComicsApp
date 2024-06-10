@@ -20,7 +20,7 @@ type PostgreSQL struct {
 	DB *sql.DB
 }
 
-func NewPostgreSQL(connString string) (*PostgreSQL, error) {
+func NewPostgreSQL(connString, migrationPath string) (*PostgreSQL, error) {
 	latestVersion := 1
 	db, err := sql.Open("postgres", connString)
 	if err != nil {
@@ -31,7 +31,7 @@ func NewPostgreSQL(connString string) (*PostgreSQL, error) {
 		log.Fatal(err)
 	}
 
-	m, err := migrate.NewWithDatabaseInstance("file://migrations", "postgres", driver)
+	m, err := migrate.NewWithDatabaseInstance(migrationPath, "postgres", driver)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -57,7 +57,6 @@ func (p *PostgreSQL) CreateComic(value []models.Item) error {
 	if err != nil {
 		return err
 	}
-	//defer tx.Rollback()
 	defer func() {
 		if p := recover(); p != nil {
 			err = tx.Rollback()
@@ -98,7 +97,7 @@ func (p *PostgreSQL) CreateComic(value []models.Item) error {
 			}
 		}
 		if id%100 == 0 {
-			fmt.Printf("Загружен %d комикс\n", id)
+			fmt.Printf("Download %d comics\n", id)
 		}
 	}
 	return tx.Commit()
@@ -140,18 +139,17 @@ func (p *PostgreSQL) CreateIndex(keywordIndices []models.KeywordIndex) error {
 	if err != nil {
 		return err
 	}
-	//defer tx.Rollback()
 	defer func() {
 		if p := recover(); p != nil {
 			err = tx.Rollback()
 			if err != nil {
-				log.Fatal("error rollback")
+				log.Fatal("error rollback", err)
 			}
 			panic(p)
 		} else if err != nil {
 			err = tx.Rollback()
 			if err != nil {
-				log.Fatal("error rollback")
+				log.Fatal("error rollback", err)
 			}
 		}
 	}()
