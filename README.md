@@ -28,7 +28,7 @@
 + govulncheck
 + PostgreSQL
 + Docker
-+ Bash
++ Shell
 
 ## Основные команды
 
